@@ -1,0 +1,2 @@
+station_id,station_name,city,country,latitude,longitude,pollutants,frequency,status
+TBD_001,TBD_station,Mediterranean_city,Spain,0.0,0.0,"PM10;PM25",daily,pending
