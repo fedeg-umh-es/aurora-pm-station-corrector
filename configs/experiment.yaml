@@ -1,0 +1,37 @@
+project: aurora-pm-station-corrector
+phase: smoke_test
+
+question: >
+  Does a train-only local corrector improve PM10/PM2.5 peak skill
+  relative to raw Aurora-AQ and persistence at urban Mediterranean stations?
+
+frequency: daily
+pollutants:
+  - PM10
+  - PM25
+
+stations: []
+
+lead_times:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+
+baselines:
+  - persistence
+  - xgb_lag_only
+  - aurora_raw
+
+primary_metrics:
+  - rmse
+  - mae
+
+secondary_metrics:
+  - p90_recall
+  - peak_bias
+
+seed: 42
