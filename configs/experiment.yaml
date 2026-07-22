@@ -1,37 +1,59 @@
 project: aurora-pm-station-corrector
-phase: smoke_test
+phase: smoke_test_v0
 
-question: >
-  Does a train-only local corrector improve PM10/PM2.5 peak skill
-  relative to raw Aurora-AQ and persistence at urban Mediterranean stations?
+scientific_question: >
+  Can a train-only local corrector improve PM10/PM2.5 peak skill relative
+  to raw Aurora-AQ and persistence at urban Mediterranean stations?
 
-frequency: daily
-pollutants:
-  - PM10
-  - PM25
+study_type: validation_technical_internal
 
-stations: []
+dataset:
+  stations_source: TBD
+  aurora_source: TBD
+  frequency: daily
+  pollutants:
+    - PM10
+    - PM25
+  stations: []
 
-lead_times:
-  - 1
-  - 2
-  - 3
-  - 4
-  - 5
-  - 6
-  - 7
+evaluation:
+  protocol: rolling_origin
+  preprocessing: train_only
+  leakage_policy: strict
+  lead_times:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
 
 baselines:
   - persistence
-  - xgb_lag_only
   - aurora_raw
+  - xgb_lag_only
 
-primary_metrics:
-  - rmse
-  - mae
+models:
+  - aurora_raw
+  - local_corrector_v0
 
-secondary_metrics:
-  - p90_recall
-  - peak_bias
+metrics:
+  primary:
+    - rmse
+    - mae
+  secondary:
+    - p90_recall
+    - peak_bias
+
+success_criterion: >
+  The local corrector must improve peak-sensitive performance relative to
+  raw Aurora-AQ without collapsing average error performance.
+
+notes:
+  - H* is not the contribution of this repo.
+  - Rolling-origin is protocol infrastructure, not novelty.
+  - Skill_VP is not active in v0.
+  - No fine-tuning of Aurora in this phase.
 
 seed: 42
