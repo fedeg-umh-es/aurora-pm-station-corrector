@@ -1,0 +1,18 @@
+Validation mode: local
+Reason CI unavailable: GitHub account blocked by billing policy (GitHub-hosted runners not allocated; runner_id=0 on all runs)
+Commit tested: eaacad02ff902524eaf246f318ee5cff0e6bd333
+Python version: 3.11.15
+Test command: python -m pytest -v
+Result: 55 passed
+Operating system: Linux 6.18.5-fc-v18
+Date: 2026-08-06T09:50:07Z
+
+Note: Local validation passed. GitHub-hosted CI was not executed because the
+organization account is administratively blocked by GitHub billing settings.
+
+Test breakdown:
+  tests/test_no_future_leak.py         — 22 tests (availability semantics, rolling-origin, lag builder, metrics)
+  tests/test_spatial_operator_consistency.py — 7 tests (bilinear/nearest, NaN, grid coords)
+  tests/test_station_eligibility.py    — 18 tests (P1 station eligibility pipeline)
+  tests/test_time_alignment.py         —  8 tests (P2 time alignment invariants)
+  Total: 55 passed, 0 failed, 0 errors
