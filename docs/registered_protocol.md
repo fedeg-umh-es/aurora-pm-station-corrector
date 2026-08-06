@@ -49,18 +49,60 @@ following mandatory fields:
 | `station_id` | Monitoring station identifier |
 | `pollutant` | PM10 or PM2.5 |
 | `cycle_time` | NWP/Aurora initialisation time (UTC) |
-| `available_time` | Earliest time at which this row may be used in a model (typically cycle_time + dissemination lag) |
-| `valid_time` | Time of the verified observation |
+| `available_time` | When the forecast became available at the forecast decision time (cycle_time + dissemination lag) |
+| `valid_time` | Time of the target observation (UTC) |
+| `target_available_time` | When the target observation was published/validated (valid_time + measurement/publication lag) |
 | `lead_hours` | `valid_time − cycle_time` in hours |
 | `obs` | Observed PM concentration at valid_time |
 | `aurora_fc` | Aurora raw forecast for valid_time |
 | `cams_fc` | CAMS raw forecast for valid_time |
-| `local_lags` | All local PM observations with `observation_time <= available_time` |
-| `provenance` | Hash identifying Aurora checkpoint, CAMS dataset, download date, cycle |
+| `local_lags` | PM observations with `observation_available_time <= available_time` |
+| `provenance` | Run-level metadata hash (see Section 9) |
 
-**Hard constraint:** `valid_time = cycle_time + lead_hours` must hold for every row. An automated test will fail if violated.
+### 3.1 Hard row invariant
 
-**Hard constraint:** No feature may use any observation with `observation_time > available_time`. Automated tests enforce this per-row.
+`valid_time = cycle_time + timedelta(hours=lead_hours)` for every row.  
+Automated test fails (non-zero exit) if this is violated.
+
+### 3.2 Train admissibility invariant
+
+A row may enter a training set at decision origin O only if:
+
+```
+available_time < O                (forecast was issued before O)
+target_available_time <= O        (target observation was published before O)
+```
+
+This is stricter than filtering on `valid_time <= O` alone, because in practice
+station observations are published with a measurement/validation delay (typically
+0.5–2 h). Automated tests enforce this per split.
+
+### 3.3 Lag feature invariant
+
+Each local lag observation used as a feature must satisfy:
+
+```
+observation_available_time <= available_time
+```
+
+where `available_time` is the forecast decision time. The lag builder enforces
+this row by row; automated tests verify it on synthetic data with known latency.
+
+### 3.4 Pseudo-operational assumption
+
+When `target_available_time` is absent from the data, the splitter falls back
+to `valid_time` (zero latency). This assumption:
+
+- must be registered in provenance metadata as `pseudo_operational: true`;
+- requires sensitivity analysis with 1-h and 2-h latency before final reporting;
+- produces a `UserWarning` at runtime.
+
+### 3.5 Threshold invariant
+
+All thresholds used for binary event classification and tail-bias computation
+must be estimated from train data only at each rolling-origin step.
+`fit_tail_threshold(obs_train, quantile)` is the only sanctioned API;
+`np.quantile` applied directly to test observations is prohibited.
 
 ---
 
@@ -127,9 +169,9 @@ For each origin O:
 
 ### 6.3 Leakage test
 
-Automated CI test: for each origin O, the maximum `valid_time` in train must be
-strictly less than or equal to `available_time` of the evaluation origin. The
-test must fail hard (non-zero exit) if this condition is violated.
+Automated CI test: for each origin O, `max(train.target_available_time) <= O`.
+The test must fail hard (non-zero exit) if violated. Filtering on `valid_time`
+alone is insufficient — it ignores the observational publication delay.
 
 ### 6.4 Threshold derivation
 
@@ -154,14 +196,14 @@ No test observations may influence threshold selection.
 
 ### 7.2 Variability
 
-| Metric |
-|---|
-| Variance ratio (predicted / observed) |
-| IQR ratio Q05–Q95 |
-| Regression slope (predicted on observed) |
-| Bias at Q90 |
-| Bias at Q95 |
-| Maximum bias (mean error at observed maximum) |
+| Metric | Note |
+|---|---|
+| Variance ratio (predicted / observed) | |
+| IQR ratio Q05–Q95 | |
+| Regression slope (predicted on observed) | OLS via `np.polyfit`; avoids ddof mismatch |
+| Tail bias at Q90 | `tail_bias(obs_test, pred_test, threshold=fit_tail_threshold(obs_train, 0.90))` |
+| Tail bias at Q95 | `tail_bias(obs_test, pred_test, threshold=fit_tail_threshold(obs_train, 0.95))` |
+| Maximum bias (mean error at observed maximum) | `max_bias(obs_test, pred_test)` |
 
 ### 7.3 Event-based (episode detection)
 
@@ -268,4 +310,33 @@ The following are not implemented in Phase A and must not be claimed:
 - [x] `docs/registered_protocol.md` — this document
 - [x] `docs/claim_boundaries.md`
 - [x] `configs/experiment_registered.yaml`
-- [ ] Phase B: single-cycle execution
+- [x] `src/validation/rolling_origin.py` — split-level leakage guards with `target_available_time`
+- [x] `src/metrics/basic.py` — provisional metric primitives
+- [x] `src/features/lag_builder.py` — observational availability enforcement
+- [x] `tests/test_no_future_leak.py` — 22 automated tests (all pass)
+- [x] `.github/workflows/tests.yml` — CI gate
+- [ ] Phase B: single-cycle execution (gate: this document merged and reviewed)
+
+## 13. Phase A Decision
+
+**Phase A — CONDITIONAL PASS**
+
+Pending: external review confirmation. Phase B is not permitted until this
+protocol document is reviewed and merged into main.
+
+Resolved issues:
+- Availability semantics corrected: `target_available_time` replaces `valid_time`
+  as the train admissibility criterion.
+- Threshold API corrected: `tail_bias` requires pre-fitted threshold from train.
+- `regression_slope` ddof mismatch fixed via `np.polyfit`.
+- `duration_error` renamed to `exceedance_count_error`; `episode_duration_error`
+  added with proper episode segmentation.
+- 22 integrated tests cover: row invariant, observational latency (1-h and 2-h),
+  pseudo-operational fallback warning, lag builder with real availability filter,
+  multi-pollutant isolation, multi-horizon and multi-station splits, metric
+  correctness, train-only threshold enforcement.
+- CI workflow added.
+
+Remaining open item before Phase D:
+- `estimator_family: TBD` must be resolved before first rolling-origin corrector
+  training run.

@@ -41,19 +41,36 @@ dataset:
 # ---------------------------------------------------------------------------
 row_schema:
   station_id: str
-  pollutant: str          # PM10 | PM2.5
-  cycle_time: datetime    # NWP/Aurora init time (UTC)
-  available_time: datetime  # earliest time row may be used in training
-  valid_time: datetime    # observation verification time
-  lead_hours: int         # valid_time - cycle_time in hours
-  obs: float              # observed PM concentration
-  aurora_fc: float        # Aurora raw forecast
-  cams_fc: float          # CAMS raw forecast
-  local_lags: list        # all obs with observation_time <= available_time
-  provenance: dict        # see reproducibility section
+  pollutant: str                  # PM10 | PM2.5
+  cycle_time: datetime            # NWP/Aurora init time (UTC)
+  available_time: datetime        # forecast decision time (cycle_time + dissemination_lag)
+  valid_time: datetime            # target observation verification time (UTC)
+  target_available_time: datetime # when target obs was published (valid_time + measurement_lag)
+  lead_hours: int                 # valid_time - cycle_time in hours
+  obs: float                      # observed PM concentration at valid_time
+  aurora_fc: float                # Aurora raw forecast
+  cams_fc: float                  # CAMS raw forecast
+  local_lags: list                # obs with observation_available_time <= available_time
+  provenance: dict                # see reproducibility section
 
 row_invariant: "valid_time == cycle_time + timedelta(hours=lead_hours)"
-leakage_invariant: "all(lag.observation_time <= available_time for lag in local_lags)"
+
+# Train admissibility (stricter than valid_time alone):
+train_invariant: |
+  available_time < origin
+  AND target_available_time <= origin
+
+# Lag feature invariant (enforced by lag builder):
+leakage_invariant: "all(lag.observation_available_time <= available_time for lag in local_lags)"
+
+pseudo_operational_assumption:
+  description: >
+    When target_available_time is absent, the splitter falls back to valid_time
+    (zero measurement/publication delay). This is not operationally realistic.
+  required_actions:
+    - register pseudo_operational=true in provenance metadata
+    - run sensitivity analysis with latency_hours in [1, 2]
+    - label results pseudo_operational in all tables and figures
 
 # ---------------------------------------------------------------------------
 # Forecast horizons
@@ -176,7 +193,10 @@ validation:
     - origin_timestamp
 
   leakage_test:
-    condition: "max(train.valid_time) <= origin.available_time"
+    condition: "max(train.target_available_time) <= origin"
+    note: >
+      Filtering on valid_time alone is insufficient — it ignores observational
+      publication delay. target_available_time must be used.
     on_violation: fail_hard  # non-zero exit; CI must catch this
 
 # ---------------------------------------------------------------------------
@@ -207,12 +227,14 @@ metrics:
       definition: "IQR_Q05_Q95(y_pred) / IQR_Q05_Q95(y_obs)"
     - name: regression_slope
       definition: "slope of y_pred ~ y_obs OLS"
-    - name: q90_bias
-      definition: "mean(y_pred[obs >= Q90] - obs[obs >= Q90])"
-    - name: q95_bias
-      definition: "mean(y_pred[obs >= Q95] - obs[obs >= Q95])"
+    - name: tail_bias_q90
+      definition: "tail_bias(obs_test, pred_test, threshold=fit_tail_threshold(obs_train, 0.90))"
+      note: threshold fitted from train only; never from test observations
+    - name: tail_bias_q95
+      definition: "tail_bias(obs_test, pred_test, threshold=fit_tail_threshold(obs_train, 0.95))"
+      note: threshold fitted from train only; never from test observations
     - name: max_bias
-      definition: "mean error at observed maximum event"
+      definition: "max_bias(obs_test, pred_test, top_k=1)"
 
   event:
     # Thresholds estimated from train data only at each rolling origin

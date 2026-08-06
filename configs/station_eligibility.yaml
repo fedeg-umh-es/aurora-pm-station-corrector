@@ -1,0 +1,71 @@
+##############################################################################
+# Station eligibility criteria — P1
+# All threshold values live here; none are hard-coded in scripts.
+##############################################################################
+
+period:
+  start: "2023-01-01"
+  end:   "2025-12-31"
+  years: [2023, 2024, 2025]
+
+pollutants:
+  - PM10
+  - PM2.5
+
+# ---------------------------------------------------------------------------
+# Coverage thresholds (primary eligibility)
+# ---------------------------------------------------------------------------
+coverage:
+  min_annual_per_pollutant: 0.90     # >= 90 % of expected hourly records per year
+  min_joint_annual: 0.85             # >= 85 % for both pollutants combined
+  max_gap_days: 30                   # no single continuous gap > 30 days
+  required_years_both_pollutants: 3  # PM10 AND PM2.5 in all three years
+
+# ---------------------------------------------------------------------------
+# Sensitivity eligibility (relaxed, for robustness checks)
+# ---------------------------------------------------------------------------
+sensitivity:
+  min_annual_per_pollutant: 0.80
+  min_joint_annual: 0.75
+  max_gap_days: 60
+
+# ---------------------------------------------------------------------------
+# Data quality checks
+# ---------------------------------------------------------------------------
+quality:
+  flag_negative_values: true      # negatives are flagged, NOT silently converted
+  flag_zero_values: false         # zeros are retained; caller decides
+  max_duplicate_tolerance: 0      # any duplicate timestamp is flagged
+
+# ---------------------------------------------------------------------------
+# Quantile record counts for rolling-origin suitability
+# ---------------------------------------------------------------------------
+quantile_records:
+  q90_train_candidate_threshold: 876   # ~10 % of 8760 h/year
+  q95_train_candidate_threshold: 438   # ~5 % of 8760 h/year
+
+# ---------------------------------------------------------------------------
+# Regional decision thresholds
+# ---------------------------------------------------------------------------
+regional_decision:
+  REGIONAL_STRONG:   20  # >= 20 eligible stations
+  REGIONAL_BOUNDED:  10  # 10–19
+  PILOT_ONLY:         5  # 5–9
+  # < 5 → STOP_OR_EXPAND_REGION
+
+# ---------------------------------------------------------------------------
+# Source configuration (populated before actual data download)
+# ---------------------------------------------------------------------------
+sources:
+  gva_portal:
+    description: >
+      Generalitat Valenciana air quality monitoring network.
+      Official hourly data files downloaded from the GVA open-data portal.
+    base_url: TBD   # set before Phase B data download
+    file_pattern: TBD
+    local_dir: data/raw/stations/gva/
+
+  fallback:
+    description: >
+      Secondary source if GVA files are unavailable for a given year/station.
+    type: none_configured
