@@ -60,4 +60,4 @@ tests/test_time_alignment.py::test_missing_lead_hour_is_detected PASSED  [ 96%]
 tests/test_time_alignment.py::test_available_time_required PASSED        [ 98%]
 tests/test_time_alignment.py::test_missing_available_time_is_detected PASSED [100%]
 
-============================== 55 passed in 2.87s ==============================
+============================== 55 passed in 0.89s ==============================
