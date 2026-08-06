@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Distribution / packaging
+*.so
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-specific: never commit raw data, credentials, or large model files
+data/raw/aurora/*.nc
+data/raw/aurora/*.grib
+data/raw/aurora/*.grib2
+data/raw/cams/
+credentials/
+*.env
+.env
+
+# Results: large prediction files stay local; only summary CSVs are committed
+results/runs/**/*.pkl
+results/runs/**/*.parquet
+results/runs/**/*.nc
+
+# Provenance JSON sidecars are committed; large artefacts are not
+*.ckpt
+*.pt
+*.h5
