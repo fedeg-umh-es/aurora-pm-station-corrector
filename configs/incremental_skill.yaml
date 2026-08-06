@@ -1,0 +1,80 @@
+project: aurora-pm-station-corrector
+phase: incremental_skill_v1
+seed: 42
+
+scientific_question: >
+  Does frozen Aurora Air Pollution provide station-level predictive information
+  for PM10 and PM2.5 beyond local concentration history and CAMS, and does that
+  incremental value persist across lead times and high-pollution conditions?
+
+claim_boundary:
+  contribution: downstream attribution and operational verification
+  not_claimed:
+    - a new post-processing algorithm
+    - novelty of rolling-origin validation
+    - causal identification
+    - fine-tuning of Aurora
+    - first station-level evaluation of Aurora
+
+data:
+  schema: docs/data_contract.md
+  pollutants: [PM10, PM25]
+  issue_timezone: UTC
+  target_unit: ug_m3
+  require_operational_availability: true
+
+evaluation:
+  lead_hours: [12, 24, 36, 48, 60, 72, 84, 96, 108, 120]
+  event_quantile: 0.90
+  outer_rolling_origin:
+    min_train_issues: 120
+    test_issues: 20
+    step_issues: 20
+    gap_issues: 0
+    train_window_issues: null
+  inner_tuning:
+    protocol: final_train_block
+    validation_issues: 20
+    metric: mae
+  reporting_levels: [station, pollutant, lead_hours, model]
+
+models:
+  raw_predictors:
+    persistence: local_latest
+    aurora_raw: aurora_pm
+    cams_raw: cams_pm
+  feature_sets:
+    local_only: [local_latest, local_lag_12, local_lag_24, local_mean_24h, local_std_24h, issue_hour_sin, issue_hour_cos, issue_doy_sin, issue_doy_cos]
+    local_aurora: [local_latest, local_lag_12, local_lag_24, local_mean_24h, local_std_24h, aurora_pm, issue_hour_sin, issue_hour_cos, issue_doy_sin, issue_doy_cos]
+    local_cams: [local_latest, local_lag_12, local_lag_24, local_mean_24h, local_std_24h, cams_pm, issue_hour_sin, issue_hour_cos, issue_doy_sin, issue_doy_cos]
+    local_aurora_cams: [local_latest, local_lag_12, local_lag_24, local_mean_24h, local_std_24h, aurora_pm, cams_pm, issue_hour_sin, issue_hour_cos, issue_doy_sin, issue_doy_cos]
+  estimators:
+    - name: ridge
+      grid:
+        alpha: [1.0, 10.0, 100.0]
+    - name: hist_gradient_boosting
+      grid:
+        learning_rate: [0.03, 0.08]
+        max_leaf_nodes: [7, 15]
+        max_iter: [200]
+        l2_regularization: [1.0]
+
+contrasts:
+  - {model: ridge__local_aurora, reference: ridge__local_only}
+  - {model: ridge__local_cams, reference: ridge__local_only}
+  - {model: ridge__local_aurora_cams, reference: ridge__local_cams}
+  - {model: ridge__local_aurora, reference: ridge__local_cams}
+  - {model: hist_gradient_boosting__local_aurora, reference: hist_gradient_boosting__local_only}
+  - {model: hist_gradient_boosting__local_cams, reference: hist_gradient_boosting__local_only}
+  - {model: hist_gradient_boosting__local_aurora_cams, reference: hist_gradient_boosting__local_cams}
+
+primary_decision_rules:
+  aurora_incremental_value: >
+    local_aurora must outperform local_only on out-of-time MAE for a coherent
+    subset of lead times, with paired uncertainty analysis before publication.
+  aurora_beyond_cams: >
+    local_aurora_cams must outperform local_cams to support a claim that Aurora
+    contributes information not already available in CAMS.
+  extremes: >
+    Average-error improvement is insufficient if variance ratio, peak bias and
+    event detection do not improve or materially deteriorate.
