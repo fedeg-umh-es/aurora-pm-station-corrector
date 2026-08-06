@@ -1,0 +1,109 @@
+##############################################################################
+# P2 — Single-cycle Aurora hindcast configuration
+# One cycle, three stations, PM10 + PM2.5, lead hours 12/24/36/48
+#
+# Gate condition: Phase A must be PASS or CONDITIONAL PASS before executing
+# any download script that references this file.
+##############################################################################
+
+# ---------------------------------------------------------------------------
+# Cycle specification
+# ---------------------------------------------------------------------------
+cycle:
+  cycle_time: "2023-07-15T12:00:00Z"   # 12 UTC preferred (operational cycle)
+  dissemination_lag_hours: 6            # available_time = cycle_time + 6h
+  lead_hours: [12, 24, 36, 48]
+
+# ---------------------------------------------------------------------------
+# Stations (three; expanded in Phase C)
+# ---------------------------------------------------------------------------
+stations:
+  - station_id: TBD_001
+    station_name: TBD
+    latitude: TBD
+    longitude: TBD
+  - station_id: TBD_002
+    station_name: TBD
+    latitude: TBD
+    longitude: TBD
+  - station_id: TBD_003
+    station_name: TBD
+    latitude: TBD
+    longitude: TBD
+
+# ---------------------------------------------------------------------------
+# Pollutants
+# ---------------------------------------------------------------------------
+pollutants:
+  - PM10
+  - PM2.5
+
+# ---------------------------------------------------------------------------
+# Spatial operator
+# ---------------------------------------------------------------------------
+spatial:
+  primary: bilinear
+  sensitivity: nearest_neighbour  # run both; compare in validation report
+
+# ---------------------------------------------------------------------------
+# Aurora Air Pollution
+# ---------------------------------------------------------------------------
+aurora:
+  checkpoint: TBD   # huggingface model id or local path; required before download
+  # Variables required by Aurora Air Pollution:
+  # Two atmospheric states separated by 6 h are required to construct the Batch.
+  # State n-1: cycle_time - 6h
+  # State n:   cycle_time
+  # Documented in microsoft/aurora model card and source code.
+  required_input_states:
+    - offset_hours: -6   # state at cycle_time - 6h
+    - offset_hours: 0    # state at cycle_time
+  rollout_steps: 4       # 4 × 12 h = 48 h
+
+# ---------------------------------------------------------------------------
+# CAMS
+# ---------------------------------------------------------------------------
+cams:
+  dataset: TBD           # e.g. "cams-global-atmospheric-composition-forecasts"
+  # Same cycle_time; same lead hours; same spatial operator
+  # Download via CDS API (requires .cdsapirc credential file)
+  cds_api_key_env: CDSAPI_KEY   # environment variable name; never hard-coded
+  variables:
+    - pm10
+    - pm2p5
+
+# ---------------------------------------------------------------------------
+# Output table schema
+# ---------------------------------------------------------------------------
+output_schema:
+  required_columns:
+    - cycle_time
+    - available_time
+    - valid_time
+    - lead_hours
+    - station_id
+    - pollutant
+    - aurora_forecast
+    - cams_forecast
+    - observation          # NaN if not yet available at available_time
+    - aurora_grid_lat
+    - aurora_grid_lon
+    - cams_grid_lat
+    - cams_grid_lon
+    - spatial_operator
+    - aurora_checkpoint
+    - cams_dataset
+    - source_file_hash
+
+# ---------------------------------------------------------------------------
+# Hard test conditions (gate)
+# ---------------------------------------------------------------------------
+gate_tests:
+  valid_time_invariant: "valid_time == cycle_time + lead_hours"
+  shared_cycle: "aurora and CAMS must use the same cycle_time"
+  comparable_units: "both outputs in µg m⁻³"
+  no_out_of_domain_stations: "all stations within Aurora and CAMS grid domains"
+  all_horizons_present: "all four lead_hours appear in output"
+  same_spatial_operator: "bilinear applied to both Aurora and CAMS"
+  no_unexplained_negatives: "aurora_forecast >= 0 and cams_forecast >= 0"
+  available_time_required: "available_time must be set on every row"

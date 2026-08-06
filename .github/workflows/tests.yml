@@ -1,0 +1,24 @@
+name: tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "claude/**"
+
+jobs:
+  pytest:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install pandas numpy pyyaml pytest
+
+      - name: Run leakage and availability tests
+        run: python -m pytest tests/ -v --tb=short

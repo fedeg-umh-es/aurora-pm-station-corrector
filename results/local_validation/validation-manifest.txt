@@ -1,0 +1,17 @@
+phase: P0
+validation_mode: local
+remote_ci_status: waived
+remote_ci_reason: GitHub account blocked by billing; runner_id=0; no runner allocated
+repository: fedeg-umh-es/aurora-pm-station-corrector
+branch: claude/aurora-pm-station-corrector-2hg6vo
+tested_commit: 8ba7658887e73f2b9d1efac6f6bdf2ebad4f23b9
+python_version: 3.11.15
+test_command: python -m pytest tests/ -v --tb=short
+test_result: 55 passed, 0 failed, 0 errors
+operating_system: Linux 6.18.5-fc-v18
+validation_timestamp_utc: 2026-08-06T10:12:00Z
+methodological_corrections: complete
+
+note: The closing commit adds only this evidence file and the updated
+      pip-freeze/pytest output. No test-affecting source files change
+      between tested_commit and the merge HEAD.
