@@ -1,0 +1,332 @@
+##############################################################################
+# Registered experiment configuration — Aurora PM Station Corrector
+# Registration date: 2026-08-06
+# Protocol: docs/registered_protocol.md
+# Claim boundaries: docs/claim_boundaries.md
+##############################################################################
+
+project: aurora-pm-station-corrector
+version: registered_v1
+phase: A  # registration only; no results
+
+# ---------------------------------------------------------------------------
+# Scientific question
+# ---------------------------------------------------------------------------
+primary_question: >
+  Do frozen Aurora Air Pollution forecasts contain predictive information for
+  PM10 and PM2.5 at station scale beyond the information contained in CAMS
+  forecasts and in local observational history available at emission time?
+
+secondary_question: >
+  Does that incremental predictive content improve detection, magnitude,
+  duration, and timing of elevated-PM episodes?
+
+# ---------------------------------------------------------------------------
+# Dataset contract
+# ---------------------------------------------------------------------------
+dataset:
+  pollutants:
+    - PM10
+    - PM2.5
+  frequency: hourly  # sub-daily observations required for hourly lead times
+  stations: []       # populated at Phase B; see stations_manifest.csv
+  aurora_source: TBD  # checkpoint identifier; required before Phase B
+  cams_source: TBD    # dataset name and cycle; required before Phase B
+  # Aurora was fine-tuned on CAMS-derived products; this dependence must be
+  # documented in methods and acknowledged in all interpretations.
+  aurora_cams_dependency: acknowledged
+
+# ---------------------------------------------------------------------------
+# Unit of analysis
+# ---------------------------------------------------------------------------
+row_schema:
+  station_id: str
+  pollutant: str          # PM10 | PM2.5
+  cycle_time: datetime    # NWP/Aurora init time (UTC)
+  available_time: datetime  # earliest time row may be used in training
+  valid_time: datetime    # observation verification time
+  lead_hours: int         # valid_time - cycle_time in hours
+  obs: float              # observed PM concentration
+  aurora_fc: float        # Aurora raw forecast
+  cams_fc: float          # CAMS raw forecast
+  local_lags: list        # all obs with observation_time <= available_time
+  provenance: dict        # see reproducibility section
+
+row_invariant: "valid_time == cycle_time + timedelta(hours=lead_hours)"
+leakage_invariant: "all(lag.observation_time <= available_time for lag in local_lags)"
+
+# ---------------------------------------------------------------------------
+# Forecast horizons
+# ---------------------------------------------------------------------------
+lead_hours:
+  - 12
+  - 24
+  - 36
+  - 48
+  - 60
+  - 72
+  - 84
+  - 96
+  - 108
+  - 120
+
+horizon_policy: >
+  Each horizon is evaluated separately. Horizons must not be pooled during
+  model fitting, evaluation, or primary inference. Aggregate metrics across
+  horizons may appear only as supplementary material.
+
+# ---------------------------------------------------------------------------
+# Models and baselines
+# ---------------------------------------------------------------------------
+models:
+  - id: seasonal_climatology
+    type: baseline
+    description: "Hour-of-day × month climatology; fitted on train rows only"
+
+  - id: persistence
+    type: baseline
+    description: "Last observation available at available_time"
+
+  - id: sarima_or_sarimax
+    type: baseline
+    description: >
+      Seasonal ARIMA on local series; SARIMAX with CAMS covariate where
+      identifiable. Order selection on train only (AIC/BIC).
+
+  - id: aurora_raw
+    type: baseline
+    description: "Aurora Air Pollution forecast; no post-processing"
+
+  - id: cams_raw
+    type: baseline
+    description: "CAMS forecast; no post-processing"
+
+  - id: local_only
+    type: corrector
+    description: "Estimator trained on local lags; no NWP input"
+    estimator_family: TBD  # same family as local_plus_aurora/cams variants
+
+  - id: local_plus_aurora
+    type: corrector
+    description: "Estimator trained on local lags + Aurora forecast"
+    estimator_family: TBD  # must match local_only and local_plus_cams
+
+  - id: local_plus_cams
+    type: corrector
+    description: "Estimator trained on local lags + CAMS forecast"
+    estimator_family: TBD  # must match local_only and local_plus_aurora
+
+  - id: local_plus_cams_plus_aurora
+    type: corrector
+    description: "Estimator trained on local lags + CAMS + Aurora"
+    estimator_family: TBD  # must match all corrector variants
+
+estimator_family_policy: >
+  Models local_only, local_plus_aurora, local_plus_cams, and
+  local_plus_cams_plus_aurora must share the same estimator family unless a
+  documented technical constraint prevents it. Any deviation must be logged
+  in provenance metadata.
+
+# ---------------------------------------------------------------------------
+# Primary and secondary contrasts
+# ---------------------------------------------------------------------------
+contrasts:
+  primary:
+    - name: aurora_increment_over_cams
+      model_a: local_plus_cams_plus_aurora
+      model_b: local_plus_cams
+      interpretation: "Does Aurora add beyond CAMS given local history?"
+
+    - name: aurora_increment_over_local
+      model_a: local_plus_aurora
+      model_b: local_only
+      interpretation: "Does Aurora add beyond local observational history?"
+
+  secondary:
+    - name: raw_head_to_head
+      model_a: aurora_raw
+      model_b: cams_raw
+
+    - name: corrected_vs_persistence
+      model_a: local_plus_cams_plus_aurora
+      model_b: persistence
+
+    - name: corrected_vs_sarima
+      model_a: local_plus_cams_plus_aurora
+      model_b: sarima_or_sarimax
+
+# ---------------------------------------------------------------------------
+# Validation protocol
+# ---------------------------------------------------------------------------
+validation:
+  protocol: rolling_origin  # or expanding_window; document choice in provenance
+  preprocessing: train_only  # imputation, scaling, lag selection: train rows only
+  leakage_policy: strict
+
+  within_origin:
+    train_split: temporal
+    internal_validation: temporal  # no random splits ever
+    hyperparameter_tuning: internal_validation_only
+    threshold_derivation: train_only
+
+  record_per_origin:
+    - train_date_range
+    - internal_validation_date_range
+    - test_date_range
+    - origin_timestamp
+
+  leakage_test:
+    condition: "max(train.valid_time) <= origin.available_time"
+    on_violation: fail_hard  # non-zero exit; CI must catch this
+
+# ---------------------------------------------------------------------------
+# Metrics
+# ---------------------------------------------------------------------------
+metrics:
+  primary_loss: MAE
+
+  continuous:
+    - name: MAE
+      role: primary
+    - name: RMSE
+    - name: bias
+      definition: mean(y_pred - y_obs)
+    - name: skill_vs_persistence
+      definition: "1 - MAE_model / MAE_persistence"
+    - name: skill_vs_sarima
+      definition: "1 - MAE_model / MAE_sarima"
+    - name: skill_vs_local_only
+      definition: "1 - MAE_model / MAE_local_only"
+    - name: skill_vs_local_plus_cams
+      definition: "1 - MAE_model / MAE_local_plus_cams"
+
+  variability:
+    - name: variance_ratio
+      definition: "var(y_pred) / var(y_obs)"
+    - name: iqr_ratio
+      definition: "IQR_Q05_Q95(y_pred) / IQR_Q05_Q95(y_obs)"
+    - name: regression_slope
+      definition: "slope of y_pred ~ y_obs OLS"
+    - name: q90_bias
+      definition: "mean(y_pred[obs >= Q90] - obs[obs >= Q90])"
+    - name: q95_bias
+      definition: "mean(y_pred[obs >= Q95] - obs[obs >= Q95])"
+    - name: max_bias
+      definition: "mean error at observed maximum event"
+
+  event:
+    # Thresholds estimated from train data only at each rolling origin
+    - POD     # probability of detection
+    - FAR     # false alarm ratio
+    - CSI     # critical success index
+    - precision
+    - recall
+    - F1
+    - temporal_error_of_maximum_hours
+    - duration_error_hours
+    - peak_concentration_error
+    - accumulated_exceedance_above_threshold
+
+# ---------------------------------------------------------------------------
+# Statistical inference
+# ---------------------------------------------------------------------------
+inference:
+  uncertainty:
+    method: block_bootstrap
+    block_length: auto  # >= autocorrelation length of residuals; logged per run
+    n_bootstrap: 1000
+
+  significance:
+    test: diebold_mariano
+    granularity: [pollutant, lead_hours, contrast]  # never pooled across horizons
+    covariance: HAC_newey_west  # when residuals show autocorrelation
+    multiplicity_correction:
+      apply_if_n_tests_gt: 10
+      methods: [bonferroni, benjamini_hochberg]  # both reported
+      # adjusted p-values must appear in results table
+
+  prohibited:
+    - pooling residuals across lead_hours in a single DM test
+    - using aggregate cross-horizon skill as primary evidence
+    - reporting raw p-values without multiplicity correction when n_tests > 10
+
+# ---------------------------------------------------------------------------
+# Reproducibility
+# ---------------------------------------------------------------------------
+provenance_schema:
+  config_hash: sha256        # hash of this YAML
+  git_commit: str            # HEAD at run time
+  aurora_checkpoint: str
+  cams_dataset: str
+  cams_download_date: iso8601
+  aurora_cycle: datetime
+  available_time: datetime
+  dependency_versions: dict  # {package: version}
+  seed: int
+  device: str
+  spatial_operator: str      # interpolation method for grid-to-station
+  stations: list
+  excluded_rows: list        # [{row_id, reason}]
+  run_duration_s: float
+  run_status: str            # "ok" | "partial" | "failed"
+
+idempotency:
+  downloads: skip_if_checksum_matches
+  model_fits: skip_if_artefact_exists_and_provenance_matches
+  results: write_to_timestamped_subdir_never_overwrite
+
+checksum_algorithm: sha256
+
+# ---------------------------------------------------------------------------
+# Phase gates
+# ---------------------------------------------------------------------------
+phases:
+  A:
+    scope: registration
+    gate: this document committed and reviewed
+    data_download_allowed: false
+
+  B:
+    scope: single_cycle
+    constraints:
+      cycles: 1
+      horizons: [12, 24, 36, 48]  # subset; all 10 required for C and D
+      stations: 3
+    gate: >
+      All 9 models produce row-level out-of-sample predictions;
+      leakage test passes; provenance complete.
+    data_download_allowed: false  # flip to true only after A gate passes
+
+  C:
+    scope: pilot
+    constraints:
+      days: 30
+      stations: "5-10"
+      horizons: all
+    gate: >
+      DM tests run for all primary contrasts; no leakage violations;
+      Phase B gate documented as PASS or CONDITIONAL PASS.
+    prerequisite: B
+
+  D:
+    scope: full_scale
+    gate: A, B, and C documented as PASS or CONDITIONAL PASS
+    prerequisite: C
+
+# ---------------------------------------------------------------------------
+# Reproducibility seed
+# ---------------------------------------------------------------------------
+seed: 42
+
+# ---------------------------------------------------------------------------
+# Non-novelty declarations (must appear in paper methods section)
+# ---------------------------------------------------------------------------
+non_novelty:
+  - rolling_origin_validation
+  - MOS_EMOS_bias_correction_family
+  - gradient_boosting_residual_correction
+  - station_scale_nwp_evaluation
+  - aurora_raw_smoothing_of_maxima
+  - threshold_based_episode_detection
+  - regional_application_comunitat_valenciana
+  - simple_aurora_raw_vs_corrected_comparison
