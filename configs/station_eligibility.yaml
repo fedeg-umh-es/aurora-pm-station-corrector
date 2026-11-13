@@ -61,9 +61,12 @@ sources:
     description: >
       Generalitat Valenciana air quality monitoring network.
       Official hourly data files downloaded from the GVA open-data portal.
-    base_url: TBD   # set before Phase B data download
-    file_pattern: TBD
+    base_url: https://dadesobertes.gva.es/api/3/action/package_show?id=med-cont-atmos-mh-{year}
+    file_pattern: "contaminacion-atmosferica-y-ozono-promedios-por-horas_{yyyymm}.csv"
+    catalogue_dataset: med-est-cont-atmos
+    licence: CC-BY
     local_dir: data/raw/stations/gva/
+    time_convention: utc_interval_end_inferred   # see docs/gva_source_notes.md
 
   fallback:
     description: >
