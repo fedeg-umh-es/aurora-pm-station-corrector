@@ -1,0 +1,341 @@
+{
+  "source": "Generalitat Valenciana open data (dadesobertes.gva.es), CC-BY",
+  "time_convention": "tidy datetime = FECHA 00:00Z + HORA h = UTC interval END (inferred; see docs/gva_source_notes.md)",
+  "header_signatures": {
+    "COD_ESTACION|NOM_ESTACION|FECHA|HORA|SO2|CO|NO|NO2|NOx|O3|PM10|PM2.5|PM1|NH3|C6H6|C7H8|C8H10|Direc.|H.Rel.|Precip.|Pres.|R.Sol.|Ruido|Temp.|UV-B|Veloc.|Veloc.max.|As|BaA|BaP|BbFA|BjFA|BkFA|Cd|DahA|FA|HMN|H2S|IcdP|Ni|Pb|PST": [
+      "202301",
+      "202302",
+      "202303",
+      "202304",
+      "202305",
+      "202306",
+      "202307",
+      "202308",
+      "202310",
+      "202311",
+      "202312",
+      "202401",
+      "202402",
+      "202403",
+      "202404",
+      "202405",
+      "202406",
+      "202407",
+      "202408",
+      "202409",
+      "202410",
+      "202411",
+      "202412",
+      "202501",
+      "202502",
+      "202503",
+      "202504",
+      "202505",
+      "202506",
+      "202507",
+      "202508",
+      "202509",
+      "202510",
+      "202511",
+      "202512"
+    ]
+  },
+  "header_changed_across_files": false,
+  "stations_in_source_files": 68,
+  "stations_with_any_pm": 37,
+  "stations_without_pm": 31,
+  "catalogue_sha256": "ed8344cd2b3e32f323771a2b46328c2170777468ba54846dd14cbaafbe7fa257",
+  "coord_status_counts": {
+    "ok": 28,
+    "duplicated_in_catalogue": 9
+  },
+  "missing_in_portal": [
+    "202309"
+  ],
+  "files": [
+    {
+      "month": "202301",
+      "encoding": "utf-8-sig",
+      "sha256": "83bdf928433c9afb0f90dbaa12859911e2d11a125ad3d6d50f69651454b67442",
+      "rows": 49848,
+      "valid_values": 46123,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202302",
+      "encoding": "utf-8-sig",
+      "sha256": "a6d8eb83754f1a312dabab6803d4a29ab50afc1817d0f9dd090f68b64bfd5c54",
+      "rows": 45024,
+      "valid_values": 41825,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202303",
+      "encoding": "utf-8-sig",
+      "sha256": "4d11ace3cbd619b84cf4fdacf29a5779cce4b91a7dc30c5fec3a301d19d8f896",
+      "rows": 49848,
+      "valid_values": 44626,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202304",
+      "encoding": "utf-8-sig",
+      "sha256": "5a066d17e9daf60f1c67278c958fa7488a805f895cdd53cdaff832ccb095f738",
+      "rows": 48960,
+      "valid_values": 43552,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202305",
+      "encoding": "utf-8-sig",
+      "sha256": "2eedc30a867e8ff8578275118cb643dbb8183dd3e50a66107678219fda80263a",
+      "rows": 50592,
+      "valid_values": 46396,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202306",
+      "encoding": "utf-8-sig",
+      "sha256": "98c94450a25cc5568961e5e5ee0f66d63ffd9523d15cc238c9f328fc377b2f97",
+      "rows": 48960,
+      "valid_values": 43613,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202307",
+      "encoding": "utf-8-sig",
+      "sha256": "dbb6bd509be2d97cf483d10963c29cd0edac6fc95e31bf29d3ecdb3ded2bce07",
+      "rows": 50592,
+      "valid_values": 45223,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202308",
+      "encoding": "utf-8-sig",
+      "sha256": "6ffed2b586703df003d827bc2456c698af4f429e094098060767ebc9fffe1162",
+      "rows": 50592,
+      "valid_values": 44967,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202309",
+      "status": "missing_in_portal"
+    },
+    {
+      "month": "202310",
+      "encoding": "utf-8-sig",
+      "sha256": "c8b41cd62239ce305e2667bd310a97f02236bb465f79a137eef9efd4e4fa42c1",
+      "rows": 50592,
+      "valid_values": 46742,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202311",
+      "encoding": "utf-8-sig",
+      "sha256": "f0b21a581935fec4f5c68cf9915685a8cccd73c5409539a75ccf1c1d5de82cf1",
+      "rows": 48960,
+      "valid_values": 42587,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202312",
+      "encoding": "utf-8-sig",
+      "sha256": "1c76ccf42dcaa652bf506688a17908e373de95ff655431d6aac7b1d0c6973828",
+      "rows": 50592,
+      "valid_values": 46321,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202401",
+      "encoding": "utf-8-sig",
+      "sha256": "8afefdc40769edbf45b8cef79d184070337549f5407b3a850357566cb66990f5",
+      "rows": 50592,
+      "valid_values": 45532,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202402",
+      "encoding": "utf-8-sig",
+      "sha256": "b44008e0bfa742bdb30f35ea79fe9b1a3b867eb74476724e8f41b93957689e2a",
+      "rows": 47328,
+      "valid_values": 43827,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202403",
+      "encoding": "utf-8-sig",
+      "sha256": "3bd92c41b1112802036eca19f8075b4ef9dd41ccd0bd6f5deba8202e252f4002",
+      "rows": 50592,
+      "valid_values": 45066,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202404",
+      "encoding": "utf-8-sig",
+      "sha256": "42a5e1cd4fd62588fe88f184846de97c231cf9208a08bd6140d2b69e66daf06f",
+      "rows": 48960,
+      "valid_values": 43257,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202405",
+      "encoding": "utf-8-sig",
+      "sha256": "a7adcd0d8c5cf667e6944849742cdd2fc4dcf0706b11a1926788306a25229f0a",
+      "rows": 50592,
+      "valid_values": 44538,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202406",
+      "encoding": "utf-8-sig",
+      "sha256": "ea0cedf4a30d55a381817a11f3ca716fe534c29cf79ed40b3ee6252179209860",
+      "rows": 48960,
+      "valid_values": 45155,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202407",
+      "encoding": "utf-8-sig",
+      "sha256": "c37adf2a0e572cba66e05549c1f3d59118f1220600277c8fd58c5cf7266adc8e",
+      "rows": 50592,
+      "valid_values": 45659,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202408",
+      "encoding": "utf-8-sig",
+      "sha256": "17b9d830617b2eeef3bab6e65e36c8ac0bfb8a13ac8e54b9cc6208e7c38b3d00",
+      "rows": 50592,
+      "valid_values": 45862,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202409",
+      "encoding": "utf-8-sig",
+      "sha256": "ceaa0949a2c5500665b03b71611ea65c2f685d975ed06fffa8322e9ce9aa5f63",
+      "rows": 48240,
+      "valid_values": 43890,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202410",
+      "encoding": "utf-8-sig",
+      "sha256": "9e34427995ac353060161b973cd013f97012defbe88eb1284fa15f23a50380ca",
+      "rows": 49848,
+      "valid_values": 44601,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202411",
+      "encoding": "utf-8-sig",
+      "sha256": "1f0dff0cd671ad1b92589b1db38e45f094d35c5227c4d04640d563b6e931dc03",
+      "rows": 48240,
+      "valid_values": 42370,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202412",
+      "encoding": "utf-8-sig",
+      "sha256": "bb368fd5b46825a376ad9e5295b27011864064938804fe92432dafde4b70d770",
+      "rows": 49848,
+      "valid_values": 41970,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202501",
+      "encoding": "utf-8-sig",
+      "sha256": "8d212736b2c120280222a0a72b43ccc1b8773f266ef70c41b3e458554beee48d",
+      "rows": 49848,
+      "valid_values": 43210,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202502",
+      "encoding": "utf-8-sig",
+      "sha256": "4e00a072caeb76db407ff64f63ed5466d5dfba77ca7dd1a7e79b6ab289d8cff8",
+      "rows": 45024,
+      "valid_values": 40134,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202503",
+      "encoding": "utf-8-sig",
+      "sha256": "339a1da1bb60382fb24a97d443c5ea0a942dbc314dd84ce6bae29b3d3aa8e25d",
+      "rows": 49848,
+      "valid_values": 45462,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202504",
+      "encoding": "utf-8-sig",
+      "sha256": "bf194b7a388968232a1ac27ffcec98ce2828316848b5cdb6df6b936c37c83ad1",
+      "rows": 48240,
+      "valid_values": 44306,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202505",
+      "encoding": "utf-8-sig",
+      "sha256": "0f4850b8876bb313223d439a32785b859fef1099aeb3a33238d2f511b304e69a",
+      "rows": 49848,
+      "valid_values": 45694,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202506",
+      "encoding": "utf-8-sig",
+      "sha256": "0ef83bb6f38b8c20f5c83266c2784523d0f6c6222519e39caef774c04580c5b2",
+      "rows": 48240,
+      "valid_values": 46216,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202507",
+      "encoding": "utf-8-sig",
+      "sha256": "d10299b54a6d98885fa775e1904ab19a6ecac03fdf8d8b44c673e0f54d049a33",
+      "rows": 49848,
+      "valid_values": 46112,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202508",
+      "encoding": "utf-8-sig",
+      "sha256": "c93aa60f383aa34eed3dcd115d2d879cd45ebf137af9f729ee84e2097453f4b3",
+      "rows": 49848,
+      "valid_values": 47488,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202509",
+      "encoding": "utf-8-sig",
+      "sha256": "7418f3a677f66166b9a75498de04886dfc940038f03191220e7630865213cb28",
+      "rows": 48240,
+      "valid_values": 45248,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202510",
+      "encoding": "utf-8-sig",
+      "sha256": "b5efbe914971b0823d20e250dbb042a3256361da418e079f3aeb3876ea9e0af6",
+      "rows": 49848,
+      "valid_values": 45953,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202511",
+      "encoding": "utf-8-sig",
+      "sha256": "fae6227ec43e3ac7ada69065976af3badba1ae9a550cfc6a7160dcb0185734ad",
+      "rows": 48240,
+      "valid_values": 43579,
+      "unparsed_tokens": {}
+    },
+    {
+      "month": "202512",
+      "encoding": "utf-8-sig",
+      "sha256": "3bdff19149399e2e575c078106caf3dcdbdc38108d89bb2d5f4e0a8e6539f35f",
+      "rows": 49848,
+      "valid_values": 44863,
+      "unparsed_tokens": {}
+    }
+  ]
+}

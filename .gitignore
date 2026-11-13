@@ -63,3 +63,7 @@ results/runs/**/*.nc
 *.ckpt
 *.pt
 *.h5
+
+# GVA raw hourly station files (re-fetchable via scripts/p1_00_fetch_gva_hourly.py; SHA-256 in manifest)
+data/raw/stations/gva/*.csv
+data/interim/gva_tidy/
